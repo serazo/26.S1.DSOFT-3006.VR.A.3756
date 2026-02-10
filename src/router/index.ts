@@ -1,47 +1,39 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { RouteRecordRaw } from 'vue-router';
-import TabsPage from '../views/TabsPage.vue'
+import BaseLayout from '@/layouts/BaseLayout.vue';
+import { useUserStore } from '@/stores/user';
 
-const Tab1Page = () => import('@/views/Tab1Page.vue');
-const Tab2Page = () => import('@/views/Tab2Page.vue');
-const Tab3Page = () => import('@/views/Tab3Page.vue');
+const Login = () => import('@/views/Login.vue');
+const Registro = () => import('@/views/Registro.vue');
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    redirect: '/tabs/tab1'
+    redirect: '/seccion'
   },
   {
-    path: '/tabs/',
-    component: TabsPage,
-    children: [
-      {
-        path: '',
-        redirect: '/tabs/tab1'
-      },
-      {
-        path: 'tab1',
-        component: Tab1Page,
-        children: [
-          {
-            path: 'content',
-            component: () => import('@/views/Content.vue')
-          },
-          {
-            path: 'otropath',
-            component: () => import('@/views/OtroPath.vue')
-          }
-        ]
-      },
-      {
-        path: 'tab2',
-        component: Tab2Page
-      },
-      {
-        path: 'tab3',
-        component: Tab3Page
-      }
-    ]
+    path: '/login',
+    name: 'Login',
+    component: Login,
+    meta: {
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/registro',
+    name: 'Registro',
+    component: Registro,
+    meta: {
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/seccion',
+    name: 'Seccion',  
+    component: BaseLayout,
+    meta: {
+      requiresAuth: true
+    },    
   }
 ]
 
@@ -49,5 +41,18 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
 })
+
+router.beforeEach((to, from, next) => {
+  const userStore = useUserStore();
+  const isAuthenticated = !!userStore.token;
+  if(to.meta.requiresAuth && !isAuthenticated) {
+    next('/login');
+  } else if(isAuthenticated && !to.meta.requiresAuth) {
+    next('/seccion');
+  }else {
+    next();
+  }
+});
+
 
 export default router
